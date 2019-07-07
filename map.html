@@ -1,0 +1,193 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #map {
+            margin: 20px auto;
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background-color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script type="text/javascript">
+        var map = document.getElementById('map')
+            // 设置食物的属性
+        function Food() {
+            this.width = 20;
+            this.height = 20;
+            this.position = 'absolute';
+            this.top = 0;
+            this.left = 0;
+            this.bgC = 'red';
+            // 设置一个属性控制只存在一条蛇
+            this.div = null
+        }
+        // 设置食物的方法
+        Food.prototype.render = function(map) {
+            // 只存在一条蛇
+            if (this.div == null) {
+                this.div = document.createElement('div')
+            }
+            this.div.style.width = this.width + 'px';
+            this.div.style.height = this.height + 'px';
+            this.div.style.position = this.position;
+            var maxw = map.offsetWidth / this.width - 1;
+            var maxh = map.offsetHeight / this.height - 1;
+            this.left = random(maxw)
+            this.top = random(maxh)
+            this.div.style.top = this.top * this.width + 'px';
+            this.div.style.left = this.left * this.width + 'px';
+            this.div.style.backgroundColor = this.bgC;
+            map.appendChild(this.div);
+        }
+        function random(length) {
+            return Math.floor(Math.random() * length)
+        }
+        var food = new Food();
+        // 渲染食物
+        food.render(map)
+        // 设置蛇的属性
+        function Snake() {
+            this.width = 20;
+            this.height = 20;
+            this.position = 'absolute';
+            // 定义一个属性保存蛇移动的方向
+            this.direstion = 'right';
+            this.body = [{
+                x: 3,
+                y: 2,
+                color: 'green', // 头部
+                isCreate: null // 设置一个属性,只允许存在 一个食物 
+            }, {
+                x: 2,
+                y: 2,
+                color: 'blue', //身体
+                isCreate: null
+            }, {
+                x: 1,
+                y: 2,
+                color: 'blue', //身体
+                isCreate: null
+            }]
+        }
+        // 渲染蛇
+        Snake.prototype.render = function(map) {
+                for (var i = 0; i < this.body.length; i++) {
+                    if (this.body[i].isCreate == null) {
+                        this.body[i].isCreate = document.createElement('div')
+                    }
+                    this.body[i].isCreate.style.width = this.width + 'px';
+                    this.body[i].isCreate.style.height = this.height + 'px';
+                    this.body[i].isCreate.style.position = this.position;
+                    this.body[i].isCreate.style.top = this.body[i].y * this.width + 'px';
+                    this.body[i].isCreate.style.left = this.body[i].x * this.width + 'px';
+                    this.body[i].isCreate.style.backgroundColor = this.body[i].color;
+                    map.appendChild(this.body[i].isCreate);
+                }
+            }
+            // 定义一个方法让蛇移动  靠身体往前推
+        Snake.prototype.move = function() {
+            // 遍历身体 从最后一个开始
+            for (let i = this.body.length - 1; i > 0; i--) {
+                this.body[i].x = this.body[i - 1].x;
+                this.body[i].y = this.body[i - 1].y;
+            }
+            // 判断头部移动方向
+            switch (this.direstion) {
+                case 'right':
+                    this.body[0].x += 1
+                    break;
+                case 'down':
+                    this.body[0].y += 1
+                    break;
+                case 'left':
+                    this.body[0].x -= 1
+                    break;
+                case 'top':
+                    this.body[0].y -= 1
+                    break;
+            }
+            // console.log(food)
+            // 让蛇吃食物  如果头的x和y坐标等于食物的坐标
+            if (this.body[0].x == food.left && this.body[0].y == food.top) {
+                var last = this.body[this.body.length - 1];
+                this.body.push({
+                    x: last.x,
+                    y: last.y,
+                    color: last.color,
+                    isCreate: null
+                });
+                // 重新渲染食物
+                food.render(map);
+            }
+        }
+        var snake = new Snake()
+            // 渲染蛇
+        snake.render(map)
+
+        // 定义一个定时器
+        var timerId = setInterval(function() {
+            // 移动蛇
+            snake.move()
+            var maxw = map.offsetWidth / food.width - 1;
+            var maxh = map.offsetHeight / food.height - 1;
+            if (snake.body[0].x < 0 || snake.body[0].y < 0 || snake.body[0].x > maxw || snake.body[0].y > maxh) {
+                alert('兄弟,想什么呢');
+                clearInterval(timerId)
+                return
+            }
+           	for(var i =1;i<snake.body.length;i++){
+           		if(snake.body[0].x==snake.body[i].x&&snake.body[0].y==snake.body[i].y){
+           			alert('这么饿的吗?')
+                clearInterval(timerId)
+           			return
+           		}
+           	}
+            // 渲染蛇
+            snake.render(map)
+        }, 300);
+        document.onkeydown = function(e) {
+            var keyCode = e.keyCode
+            // console.log(keyCode)
+            switch (keyCode) {
+                case 37:
+	                if(snake.direstion=='right'){
+	                	return
+	                }
+                    snake.direstion = 'left'
+                    break;
+                    
+                case 38:
+                	if(snake.direstion=='down'){
+                		return
+                	}
+                    snake.direstion = 'top'
+                    break;
+                case 39:
+                	if(snake.direstion=='left'){
+                	return
+                	}
+                    snake.direstion = 'right'
+                    break;
+                case 40:
+	                if(snake.direstion=='top'){
+	                	return
+	                }
+                    snake.direstion = 'down'
+                    break;
+                default:
+                    break;
+            }
+        }
+    </script>
+</body>
+
+</html>
